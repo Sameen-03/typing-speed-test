@@ -4,13 +4,14 @@ import requests
 import json
 from tabulate import tabulate
 
+
 def main():
     total_score = 0
     duration = 60
     lang = language()
     words = get_words(lang)
 
-    while time.time() - start_time < duration:
+    while time.time() - start_time <= duration:
         word = generate_word(words)
         print(word)
         user_input = input("Enter the word: ")
@@ -19,11 +20,12 @@ def main():
             total_score += 1
 
     print(f"Time's up! your typing speed is {total_score} wpm")
-    save_score(name,total_score)
+    save_score(name, total_score)
     create_and_display_table_of_scores()
 
+
 def language():
-    lang = input("Enter the language: ")
+    lang = input("Enter the language (English/Spanish/Arabic): ")
     return lang
 
 
@@ -34,12 +36,9 @@ def get_words(lang):
 
         try:
             response = requests.get(url)
-            response.raise_for_status()  # Raise an exception if the request fails
+            response.raise_for_status()
 
-            # Parse the JSON content
             common_words = json.loads(response.text)
-
-            # Access the common words list
             words = common_words["commonWords"]
 
         except requests.exceptions.RequestException as e:
@@ -48,24 +47,30 @@ def get_words(lang):
             print("Error parsing JSON:", e)
 
     elif lang.lower() == "spanish":
-        # URL of the Spanish word list
         url = "https://www.wordfrequency.info/span/samples/span_40k_lemmas.txt"
 
         try:
-            # Send a GET request to fetch the content of the URL
             response = requests.get(url)
-            response.raise_for_status()  # Raise an exception if the request fails
-
-            # Split the content into lines and create a list of Spanish words
+            response.raise_for_status()
             spanish_words = response.text.split()
-
-            # Filter out non-Spanish words, comments, numbers, and single characters
             spanish_words = [word for word in spanish_words if word.isalpha() and len(word) > 1]
-
-            # Remove the first 39 words from the list
             words = spanish_words[39:]
         except requests.exceptions.RequestException as e:
             print("Error fetching data:", e)
+
+    elif lang.lower() == "arabic":
+
+        url = "https://raw.githubusercontent.com/mohataher/arabic-stop-words/master/list.txt"
+
+        response = requests.get(url)
+        if response.status_code == 200:
+            arabic_words = response.text.split('\n')
+            arabic_words = [word.strip() for word in arabic_words if word.strip()]
+            words = arabic_words
+
+        else:
+            print("Failed to retrieve data from the URL. Status code:", response.status_code)
+
     return words
 
 
@@ -111,3 +116,4 @@ if __name__ == "__main__":
     score_file = "scores.txt"
     start_time = time.time()  # Record the start time
     main()
+

@@ -12,7 +12,8 @@ def main():
     duration = 60
     start_time = time.time()  # Record the start time
     lang = get_language()
-    words = get_words(lang)
+    difficulty_level = get_difficulty_level()
+    words = get_words_by_difficulty(difficulty_level, lang)
 
     while time.time() - start_time <= duration:
         word = generate_word(words)
@@ -25,6 +26,7 @@ def main():
     print(f"Time's up! Your typing speed is {total_score} wpm")
     save_score(name, total_score)
     create_and_display_table_of_scores()
+
 
 def get_language():
     lang = input("Enter the language (English/Spanish/Arabic): ")
@@ -94,6 +96,30 @@ def create_and_display_table_of_scores():
         print("No scores found.")
     except Exception as e:
         print("Error reading scores:", e)
+
+
+def get_difficulty_level():
+    while True:
+        try:
+            level = int(input("Enter the difficulty level (1: Easy, 2: Medium, 3: Hard): "))
+            if 1 <= level <= 3:
+                return level
+            else:
+                print("Invalid input. Please enter a valid difficulty level.")
+        except ValueError:
+            print("Invalid input. Please enter a valid difficulty level.")
+
+
+def get_words_by_difficulty(level, lang):
+    words = get_words(lang)
+
+    if level == 1:  # Easy level: 2-3 letter words
+        return [word for word in words if 2 <= len(word) <= 3]
+    elif level == 2:  # Medium level: Slightly longer words
+        return [word for word in words if 4 <= len(word) <= 6]
+    elif level == 3:  # Hard level: Longer words
+        return [word for word in words if len(word) >= 7]
+
 
 if __name__ == "__main__":
     print("Typing speed test")

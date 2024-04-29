@@ -2,17 +2,24 @@ import time
 import random
 import requests
 import json
+import sys
+import re
 from tabulate import tabulate
 
 # Constants
 SCORE_FILE = "scores.txt"
 
 def main():
+    name = input("Enter your name: ")
+    Name = check_name(name)
     total_score = 0
     duration = 60
     start_time = time.time()  # Record the start time
-    lang = get_language()
-    words = get_words(lang)
+    lang = input("Enter the language (English/Spanish/Arabic): ")
+    language = get_language(lang)
+    level = int(input("Enter the difficulty level (1: Easy, 2: Medium, 3: Hard): "))
+    difficulty_level = get_difficulty_level(level)
+    words = get_words_by_difficulty(difficulty_level, language)
 
     while time.time() - start_time <= duration:
         word = generate_word(words)
@@ -23,12 +30,15 @@ def main():
             total_score += 1
 
     print(f"Time's up! Your typing speed is {total_score} wpm")
-    save_score(name, total_score)
+    save_score(Name, total_score)
     create_and_display_table_of_scores()
 
-def get_language():
-    lang = input("Enter the language (English/Spanish/Arabic): ")
-    return lang
+
+def get_language(lang):
+    if lang.lower() in ["english","arabic","spanish"]:
+        return lang
+    else:
+        sys.exit("Language not supported")
 
 def get_words(lang):
     words = []
@@ -39,8 +49,7 @@ def get_words(lang):
     elif lang.lower() == "arabic":
         url = "https://raw.githubusercontent.com/mohataher/arabic-stop-words/master/list.txt"
     else:
-        print("Language not supported.")
-        exit(1)
+        sys.exit("Language not supported")
 
     try:
         response = requests.get(url)
@@ -68,12 +77,13 @@ def get_words(lang):
 def generate_word(words):
     return random.choice(words)
 
-def save_score(name, score):
+def save_score(Name, score):
     try:
         with open(SCORE_FILE, "a") as file:
-            file.write(f"{name}: {score}\n")
+            file.write(f"{Name}: {score}\n")
     except Exception as e:
-        print("Error saving score:", e)
+        sys.exit("Error saving score:", e)
+
 
 def create_and_display_table_of_scores():
     try:
@@ -95,7 +105,34 @@ def create_and_display_table_of_scores():
     except Exception as e:
         print("Error reading scores:", e)
 
+
+def get_difficulty_level(level):
+        try:
+            if 1 <= level <= 3:
+                return level
+            else:
+                sys.exit("Invalid input")
+        except ValueError:
+            sys.exit("Invalid input")
+
+
+def get_words_by_difficulty(level, lang):
+    words = get_words(lang)
+    if level == 1:  # Easy level: 2-3 letter words
+        return [word for word in words if 2 <= len(word) <= 3]
+    elif level == 2:  # Medium level: Slightly longer words
+        return [word for word in words if 4 <= len(word) <= 6]
+    elif level == 3:  # Hard level: Longer words
+        return [word for word in words if len(word) >= 7]
+
+def check_name(name):
+    pattern = "^[a-zA-Z0-9]+$"
+    if re.match(pattern, name):
+        return name
+    else:
+        sys.exit("Invalid name")
+
+
 if __name__ == "__main__":
     print("Typing speed test")
-    name = input("Enter your name: ")
     main()
